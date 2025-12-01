@@ -12,6 +12,10 @@ if test (count $brewcmds) -eq 0
 end
 $brewcmds[1] shellenv | source
 
+# These should now be set, but we can do this as a failsafe
+set -q HOMEBREW_PREFIX || set HOMEBREW_PREFIX (brew --prefix)
+set -q HOMEBREW_REPOSITORY || set HOMEBREW_REPOSITORY (brew --repository)
+
 # If the brew path is owned by another user, wrap it so brew commands
 # are executed as the brew owner.
 set -gx HOMEBREW_OWNER (stat -f "%Su" $HOMEBREW_PREFIX)
@@ -38,8 +42,11 @@ if test -e "$HOMEBREW_PREFIX/share/fish/completions"
     set --append fish_complete_path "$HOMEBREW_PREFIX/share/fish/completions"
 end
 
-# Add command not found handler
-brew command-not-found-init 2>/dev/null | source
+# Add command not found handler (brew command-not-found-init)
+set HOMEBREW_COMMAND_NOT_FOUND_HANDLER $HOMEBREW_REPOSITORY/Library/Homebrew/command-not-found/handler.fish
+if test -f $HOMEBREW_COMMAND_NOT_FOUND_HANDLER
+    source $HOMEBREW_COMMAND_NOT_FOUND_HANDLER
+end
 
 # Other homebrew vars.
 set -q HOMEBREW_NO_ANALYTICS || set -gx HOMEBREW_NO_ANALYTICS 1
